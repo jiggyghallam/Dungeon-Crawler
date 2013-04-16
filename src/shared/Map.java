@@ -7,9 +7,9 @@ import Rooms.RoomTypes;
 
 public class Map {
 
-	private static final int MAX_MAP_SIZE = 15;
+	private static final int MAX_MAP_SIZE = 10;
 	private static final int SECRET_ROOMS = 2;
-	private static final int START_POS = 7;
+	private static final int START_POS = MAX_MAP_SIZE / 2;
 	private static final int DEFAULT_SIZE = 5;
 
 	private int size;
@@ -62,7 +62,7 @@ public class Map {
 		int jPos = START_POS;
 		int mapSize = size;
 		if (Global.DEBUG)
-			System.out.println(mapSize);
+			System.out.println("Map size: " + mapSize);
 
 		// Set start position;
 		roomMap[iPos][jPos] = RoomTypes.START;
@@ -72,18 +72,13 @@ public class Map {
 			iPos = START_POS;
 			jPos = START_POS;
 			while (!foundEmpty) {
-				if (Global.DEBUG)
-					System.out.println("Inside " + iPos + " " + jPos + " " + i);
 				Direction direction = Direction.values()[random
 						.nextInt(Direction.values().length - 1)];
 				RoomTypes room = chooseRoom(i);
-				if (Global.DEBUG)
-					System.out.println(direction);
 				if (canPlace(iPos, jPos, direction, room)) {
 					place(iPos, jPos, direction, room);
 					break;
 				}
-
 				direction = Direction.values()[random.nextInt(Direction
 						.values().length - 1)];
 				Node n = getRoom(iPos, jPos, direction);
@@ -99,7 +94,7 @@ public class Map {
 
 		if (Global.DEBUG) {
 			for (int i = 0; i < MAX_MAP_SIZE; i++)
-				System.out.println(Arrays.toString(roomMap[i]));	
+				System.out.println(Arrays.toString(roomMap[i]));
 			System.out.println();
 		}
 	}
@@ -163,8 +158,6 @@ public class Map {
 		Node n = getRoom(iCurrent, jCurrent, direction);
 		if (n != null && roomMap[n.i][n.j] == RoomTypes.NULL)
 			return true;
-		if (Global.DEBUG)
-			System.out.println("Room could not be placed at position");
 		return false;
 	}
 
@@ -206,9 +199,6 @@ public class Map {
 			roomMap[n.i][n.j] = roomType;
 			return true;
 		}
-		if (Global.DEBUG)
-			System.out.println("Room " + roomType
-					+ " could not be placed at position" + n.i + " " + n.j);
 		return false;
 	}
 
@@ -268,13 +258,14 @@ public class Map {
 			return RoomTypes.BOSS;
 
 		RoomTypes roomToPlace;
-			
+
 		if (i < lowerLimit)
-			roomToPlace = RoomTypes.values()[rooms % (RoomTypes.values().length - 7)];
+			roomToPlace = RoomTypes.values()[rooms
+					% (RoomTypes.values().length - 7)];
 		else
-			roomToPlace = RoomTypes.values()[rooms % (RoomTypes.values().length - 2)];
-		
-		
+			roomToPlace = RoomTypes.values()[rooms
+					% (RoomTypes.values().length - 2)];
+
 		if (roomToPlace == RoomTypes.BOSS && !bHasBossRoom) {
 			bHasBossRoom = true;
 			return RoomTypes.BOSS;
