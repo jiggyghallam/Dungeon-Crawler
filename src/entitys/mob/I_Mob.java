@@ -138,7 +138,7 @@ public interface I_Mob {
 	 * Paints the player to the screen
 	 * @param g {@link Graphics2D} 
 	 */
-	public void render(Graphics g);
+	public void render(Graphics2D g);
 	
 	/**
 	 * If the object is alive it will be drawn

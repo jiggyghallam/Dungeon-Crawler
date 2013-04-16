@@ -30,7 +30,7 @@ public class Main{
 
 	private static void createBase() {
 		JFrame frame = new JFrame();
-		frame.setSize(1280, 720);
+		frame.setSize(1287, 749);
 		JPanel panel = new JPanel(new BorderLayout());
 		frame.setVisible(true);
 		frame.setResizable(false);

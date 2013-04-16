@@ -1,21 +1,26 @@
 package entitys.mob;
 
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.geom.Ellipse2D;
+import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
+
 import shared.Keys;
 import shared.Buttons;
-
-
 
 public class Player extends Mob implements I_Player {
 
 	private int XP;
 	private Keys keys;
 	private Buttons buttons;
-	//private BufferedImage image;
+	private BufferedImage image;
 	private int currentWeapon;
 
-	public Player(String playerName, int MAX_HP, int XP, Keys keys, Buttons buttons) {
+	public Player(String playerName, int MAX_HP, int XP, Keys keys,
+			Buttons buttons) {
 		super(playerName, MAX_HP);
 		this.keys = keys;
 		this.buttons = buttons;
@@ -25,7 +30,9 @@ public class Player extends Mob implements I_Player {
 		currentWeapon = 0;
 		setSpeed(4);
 		setXP(XP);
+		image = new BufferedImage(10, 10, BufferedImage.TYPE_INT_ARGB);
 	}
+	
 
 	public void tick() {
 
@@ -39,9 +46,8 @@ public class Player extends Mob implements I_Player {
 			moveRight(true);
 	}
 
-	public void render(Graphics g) {
-			g.setColor(Color.BLUE);
-			g.drawRect(X_POS, Y_POS, 10, 10);
+	public void render(Graphics2D g) {
+		g.drawRect(X_POS, Y_POS, 10, 10);
 
 	}
 

@@ -9,6 +9,8 @@ import java.awt.event.KeyListener;
 import java.awt.image.BufferStrategy;
 import java.util.ArrayList;
 
+import Rooms.Room;
+
 import entitys.Entity;
 
 
@@ -71,17 +73,43 @@ public class Base extends Canvas implements Runnable, KeyListener {
 	}
 	
 	/**
-	 * Renders all entities to screen
+	 *  Renders a black background
+	 */
+	public void renderBackground() {
+		BufferStrategy bs = getBufferStrategy();
+		if (bs == null) {
+			createBufferStrategy(3);
+		}
+		Graphics g = bs.getDrawGraphics();
+		Graphics2D g2d = (Graphics2D) g.create();
+		g.setColor(Color.BLACK);
+		g.fillRect(0, 0, 1280, 720);
+	}
+	
+	/**
+	 *  Renders the background
+	 */
+	public void renderBackground(Room r) {
+		BufferStrategy bs = getBufferStrategy();
+		if (bs == null) {
+			createBufferStrategy(3);
+		}
+		Graphics g = bs.getDrawGraphics();
+		Graphics2D g2d = (Graphics2D) g.create();
+		renderBackground();
+		r.render(g2d);
+	}
+	
+	
+	/**
+	 * Renders all entities to the foreground
 	 * @param g {@link Graphics2D}
 	 */
 	public void render(Graphics g) {
-		g.setColor(Color.GRAY);
-		g.fillRect(0, 0, 4000, 3000);
-//		long start = System.currentTimeMillis();
+		Graphics2D g2d = (Graphics2D) g.create();
 		for (Entity e : entities) {
-			e.render(g);
+			e.render(g2d);
 		}
-//		System.out.println("Render time: " + (System.currentTimeMillis() - start) + "ms");
 	}
 	
 	/**
@@ -132,6 +160,10 @@ public class Base extends Canvas implements Runnable, KeyListener {
 	public void stop() {
 		running = false;
 	}
+	
+	public void gameAction() {
+		
+	}
 
 	public void run() {
 		long lastTime = System.nanoTime();
@@ -172,6 +204,7 @@ public class Base extends Canvas implements Runnable, KeyListener {
 				createBufferStrategy(3);
 				continue;
 			}
+			gameAction();
 			
 			if (shouldRender) {
 				frames++;
@@ -187,6 +220,7 @@ public class Base extends Canvas implements Runnable, KeyListener {
 					max = timePassed;
 				}
 				lastRenderTime = renderTime;
+				g.dispose();
 			}
 			long now = System.nanoTime();
 			unprocessed += (now - lastTime) / nsPerTick;

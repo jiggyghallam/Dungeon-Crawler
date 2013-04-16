@@ -1,6 +1,7 @@
 package entitys;
 
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 
 import shared.Base;
 
@@ -21,7 +22,7 @@ public class Entity {
     }
 
 	
-	public void render(Graphics g) {
+	public void render(Graphics2D g) {
 
 	}
 	

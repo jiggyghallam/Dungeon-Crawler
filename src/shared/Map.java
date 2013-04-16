@@ -3,6 +3,8 @@ package shared;
 import java.util.Arrays;
 import java.util.Random;
 
+import Rooms.RoomTypes;
+
 public class Map {
 
 	private static final int MAX_MAP_SIZE = 15;
