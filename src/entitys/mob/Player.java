@@ -47,7 +47,8 @@ public class Player extends Mob implements I_Player {
 	}
 
 	public void render(Graphics2D g) {
-		g.drawRect(X_POS, Y_POS, 10, 10);
+		g.setColor(Color.GREEN);
+		g.fillRect(X_POS, Y_POS, 20, 20);
 
 	}
 
