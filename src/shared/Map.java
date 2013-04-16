@@ -1,6 +1,5 @@
 package shared;
 
-import java.sql.Time;
 import java.util.Arrays;
 import java.util.Random;
 
@@ -8,23 +7,25 @@ public class Map {
 
 	private static final int MAX_MAP_SIZE = 15;
 	private static final int SECRET_ROOMS = 2;
-	private static final int MINI_BOSS_ROOMS = 1;
-	private static final int TREASURE_ROOMS = 1;
 	private static final int START_POS = 7;
 	private static final int DEFAULT_SIZE = 5;
 
 	private int size;
+	private int lowerLimit;
 	private int iSecretRooms;
 	private int iMiniBossRooms;
 	private int iTreasureRooms;
+	private int iShops;
+	private boolean bHasBossRoom = false;
 	private Random random = new Random(System.currentTimeMillis());
-	private int[][] currentMap = new int[MAX_MAP_SIZE][MAX_MAP_SIZE];
+	private RoomTypes[][] roomMap;
 
 	/**
 	 * Constructor, with a size set to 5
 	 */
 	public Map() {
 		setSize(DEFAULT_SIZE);
+		init();
 	}
 
 	/**
@@ -34,6 +35,21 @@ public class Map {
 	 */
 	public Map(int size) {
 		this.setSize(size);
+		init();
+	}
+
+	/**
+	 * Initialises the class
+	 */
+	private void init() {
+		roomMap = new RoomTypes[MAX_MAP_SIZE][MAX_MAP_SIZE];
+		for (int i = 0; i < MAX_MAP_SIZE; i++)
+			Arrays.fill(roomMap[i], RoomTypes.NULL);
+		iSecretRooms = SECRET_ROOMS;
+		iMiniBossRooms = size < 10 ? 0 : 2 + random.nextInt(size / 10);
+		iTreasureRooms = size < 10 ? 1 : 2 + random.nextInt(size / 10);
+		iShops = size < 10 ? 1 : 2 + random.nextInt(size / 10);
+		lowerLimit = size < 15 ? 4 : 4 + size / 20;
 	}
 
 	/**
@@ -43,42 +59,47 @@ public class Map {
 		int iPos = START_POS;
 		int jPos = START_POS;
 		int mapSize = size;
-		System.out.println(mapSize);
-		iSecretRooms = SECRET_ROOMS;
-		iMiniBossRooms = MINI_BOSS_ROOMS;
-		iTreasureRooms = TREASURE_ROOMS;
+		if (Global.DEBUG)
+			System.out.println(mapSize);
 
 		// Set start position;
-		currentMap[iPos][jPos] = 5;
+		roomMap[iPos][jPos] = RoomTypes.START;
 		mapSize--;
 		for (int i = 0; i < mapSize; i++) {
 			boolean foundEmpty = false;
 			iPos = START_POS;
 			jPos = START_POS;
 			while (!foundEmpty) {
+				if (Global.DEBUG)
+					System.out.println("Inside " + iPos + " " + jPos + " " + i);
 				Direction direction = Direction.values()[random
 						.nextInt(Direction.values().length - 1)];
+				RoomTypes room = chooseRoom(i);
 				if (Global.DEBUG)
 					System.out.println(direction);
-				if (canPlace(iPos, jPos, direction, 0)) {
-					place(iPos, jPos, direction, 0);
-					foundEmpty = true;
-				} else {
-					direction = Direction.values()[random.nextInt(Direction
-							.values().length - 1)];
-					Node n = getRoom(iPos, jPos, direction);
-					if (currentMap[n.i][n.j] != 0) {
+				if (canPlace(iPos, jPos, direction, room)) {
+					place(iPos, jPos, direction, room);
+					break;
+				}
+
+				direction = Direction.values()[random.nextInt(Direction
+						.values().length - 1)];
+				Node n = getRoom(iPos, jPos, direction);
+				if (n != null) {
+					if (canMove(n.i, n.j)) {
 						iPos = n.i;
 						jPos = n.j;
 					}
 				}
-
 			}
 
 		}
 
-		for (int i = 0; i < MAX_MAP_SIZE; i++)
-			System.out.println(Arrays.toString(currentMap[i]));
+		if (Global.DEBUG) {
+			for (int i = 0; i < MAX_MAP_SIZE; i++)
+				System.out.println(Arrays.toString(roomMap[i]));	
+			System.out.println();
+		}
 	}
 
 	/**
@@ -107,13 +128,13 @@ public class Map {
 	 *            {@link int}
 	 */
 	public void setSize(int size) {
-		if (size < MAX_MAP_SIZE * MAX_MAP_SIZE)
+		if (size < MAX_MAP_SIZE * MAX_MAP_SIZE && !(size < 2))
 			this.size = size;
 		else {
 			this.size = DEFAULT_SIZE;
 			if (Global.DEBUG)
 				System.err.println("Map size unchanged, size " + size
-						+ " was to large, please use a size less than "
+						+ " is not alowed, please use a size between 2 and "
 						+ (MAX_MAP_SIZE * MAX_MAP_SIZE - MAX_MAP_SIZE)
 						+ " current map has been resized to " + DEFAULT_SIZE);
 		}
@@ -136,13 +157,31 @@ public class Map {
 	 * @return {@link boolean} true if a room can be placed
 	 */
 	private boolean canPlace(int iCurrent, int jCurrent, Direction direction,
-			int roomType) {
+			RoomTypes roomType) {
 		Node n = getRoom(iCurrent, jCurrent, direction);
-		if (n != null && currentMap[n.i][n.j] == 0)
+		if (n != null && roomMap[n.i][n.j] == RoomTypes.NULL)
 			return true;
 		if (Global.DEBUG)
-			System.out.println("Room could not be placed at position " + n.i
-					+ " " + n.j);
+			System.out.println("Room could not be placed at position");
+		return false;
+	}
+
+	/**
+	 * Checks if you can move into this room so that you can place more rooms
+	 * coming off it
+	 * 
+	 * @param i
+	 *            {@link int} current room i
+	 * @param j
+	 *            {@link int} current room j
+	 * @return {@link Boolean} True if can place
+	 */
+	private boolean canMove(int i, int j) {
+		RoomTypes room = roomMap[i][j];
+		if (room == RoomTypes.NORMAL || room == RoomTypes.EMPTY
+				|| room == RoomTypes.START) {
+			return true;
+		}
 		return false;
 	}
 
@@ -159,15 +198,15 @@ public class Map {
 	 * @return {@link Boolean} True if the room was placed successfully
 	 */
 	private boolean place(int iCurrent, int jCurrent, Direction direction,
-			int roomType) {
+			RoomTypes roomType) {
 		Node n = getRoom(iCurrent, jCurrent, direction);
 		if (n != null) {
-			currentMap[n.i][n.j] = 1;
+			roomMap[n.i][n.j] = roomType;
 			return true;
 		}
 		if (Global.DEBUG)
-			System.out.println("Room could not be placed at position" + n.i
-					+ " " + n.j);
+			System.out.println("Room " + roomType
+					+ " could not be placed at position" + n.i + " " + n.j);
 		return false;
 	}
 
@@ -188,19 +227,19 @@ public class Map {
 		switch (direction) {
 
 		case NORTH:
-			if (jCurrent > 0)
+			if (iCurrent > 0)
 				return (new Node(iCurrent - 1, jCurrent));
 			break;
 		case EAST:
-			if (iCurrent < MAX_MAP_SIZE - 1)
+			if (jCurrent < MAX_MAP_SIZE - 1)
 				return (new Node(iCurrent, jCurrent + 1));
 			break;
 		case SOUTH:
-			if (jCurrent < MAX_MAP_SIZE - 1)
+			if (iCurrent < MAX_MAP_SIZE - 1)
 				return (new Node(iCurrent + 1, jCurrent));
 			break;
 		case WEST:
-			if (iCurrent > 0)
+			if (jCurrent > 0)
 				return (new Node(iCurrent, jCurrent - 1));
 			break;
 		default:
@@ -208,5 +247,53 @@ public class Map {
 		}
 		// Can unable to get that room
 		return null;
+	}
+
+	/**
+	 * Chooses a random room based on how many rooms have already been placed, a
+	 * boss will always be placed as long as the map is > 2
+	 * 
+	 * @param i
+	 *            {@link int} how many rooms have already been placed
+	 * @return {@link RoomTypes}
+	 */
+	private RoomTypes chooseRoom(int i) {
+		// Randomly selects a room, -2 used because can not place START or NULL
+		int rooms = random.nextInt(RoomTypes.values().length - 2);
+
+		// Always place a boss!
+		if (i == (size - 2) && !bHasBossRoom)
+			return RoomTypes.BOSS;
+
+		RoomTypes roomToPlace;
+			
+		if (i < lowerLimit)
+			roomToPlace = RoomTypes.values()[rooms % (RoomTypes.values().length - 7)];
+		else
+			roomToPlace = RoomTypes.values()[rooms % (RoomTypes.values().length - 2)];
+		
+		
+		if (roomToPlace == RoomTypes.BOSS && !bHasBossRoom) {
+			bHasBossRoom = true;
+			return RoomTypes.BOSS;
+		}
+		if (roomToPlace == RoomTypes.MINIBOSS && iMiniBossRooms > 0) {
+			iMiniBossRooms--;
+			return RoomTypes.MINIBOSS;
+		}
+		if (roomToPlace == RoomTypes.TREASURE && iTreasureRooms > 0) {
+			iTreasureRooms--;
+			return RoomTypes.TREASURE;
+		}
+		if (roomToPlace == RoomTypes.SHOP && iShops > 0) {
+			iShops--;
+			return RoomTypes.SHOP;
+		}
+		if (roomToPlace == RoomTypes.SECRET && iSecretRooms > 0) {
+			iSecretRooms--;
+			return RoomTypes.SECRET;
+		}
+
+		return RoomTypes.values()[rooms % 2];
 	}
 }
