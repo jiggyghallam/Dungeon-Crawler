@@ -10,11 +10,8 @@ public class Map {
 	private static final int TREASURE_ROOMS = 1;
 	private static final int START_POS = 7;
 	private static final int DEFAULT_SIZE = 5;
-	private static final int NORTH = 0;
-	private static final int EAST = 1;
-	private static final int SOUTH = 2;
-	private static final int WEST = 3;
-	private static final int RANDOM_DIRECTION = (int) (Math.random() * 4);
+	private static final Direction RANDOM_DIRECTION = Direction.values()[(int) (Math
+			.random() * Direction.values().length - 1)];
 
 	private int size;
 	private int iSecretRooms;
@@ -58,7 +55,7 @@ public class Map {
 			iPos = START_POS;
 			jPos = START_POS;
 			while (!foundEmpty) {
-				int direction = RANDOM_DIRECTION;
+				Direction direction = RANDOM_DIRECTION;
 				System.out.println(direction);
 				if (canPlace(iPos, jPos, direction, 0)) {
 					place(iPos, jPos, direction, 0);
@@ -126,32 +123,63 @@ public class Map {
 	 * 
 	 * @return {@link boolean} true if a room can be placed
 	 */
-	private boolean canPlace(int iCurrent, int jCurrent, int direction,
+	private boolean canPlace(int iCurrent, int jCurrent, Direction direction,
 			int roomType) {
-		// TODO
+		if (getRoom(iCurrent, jCurrent, direction) != null)
+			return true;
 		return false;
 	}
 
-	private boolean place(int iCurrent, int jCurrent, int direction,
+	/**
+	 * Places a room, at a in the direction from your current location
+	 * @param iCurrent {@link int}
+	 * @param jCurrent {@link int}
+	 * @param direction {@link Direction}
+	 * @param roomType
+	 * @return {@link Boolean} True if the room was placed successfully 
+	 */
+	private boolean place(int iCurrent, int jCurrent, Direction direction,
 			int roomType) {
-		// TODO
+		Node n = getRoom(iCurrent, jCurrent, direction);
+		if  (n!= null) {
+			currentMap[n.i][n.j] = 1;
+			return true;
+		}
+		System.err.println("Room could not be placed at position" + n.i + " " + n.j);
+		return false;
+	}
+
+	/**
+	 * Returns a node containing the co-ordinates of a room, using current location and a direction you are moving
+	 * @param iCurrent {@link int}
+	 * @param jCurrent {@link int}
+	 * @param direction {@link Direction}
+	 * @return {@link Node}
+	 */
+	private Node getRoom(int iCurrent, int jCurrent, Direction direction) {
 
 		switch (direction) {
 
 		case NORTH:
-			return true;
+			if (jCurrent > 0)
+				return (new Node(iCurrent, jCurrent - 1));
+			break;
 		case EAST:
-
-			return true;
+			if (iCurrent < MAX_MAP_SIZE - 1)
+				return (new Node(iCurrent + 1, jCurrent));
+			break;
 		case SOUTH:
-
-			return true;
+			if (jCurrent < MAX_MAP_SIZE - 1)
+				return (new Node(iCurrent, jCurrent - 1));
+			break;
 		case WEST:
-
-			return true;
+			if (iCurrent > 0)
+				return (new Node(iCurrent, jCurrent - 1));
+			break;
 		default:
-			return false;
-
+			return null;
 		}
+		//Can unable to get that room
+		return null;
 	}
 }
