@@ -16,8 +16,8 @@ public class GameMain extends Base{
 	}
 	
 	public void Startup() {
-		map = new Map();
-		//map.createMap();
+		map = new Map(30);
+		map.createMap();
 		addEntity(new Player(null, 10, 10, keys, buttons));
 	}
 

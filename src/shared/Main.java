@@ -8,8 +8,15 @@ import javax.swing.SwingUtilities;
 
 
 public class Main{
+
 	
 	public static void main(String args[]) {
+		
+		for (int i = 0; i < args.length; i++) {
+			if (args[i].startsWith("-d"))  {
+				Global.DEBUG = true;
+			}
+		}
 		
 		SwingUtilities.invokeLater(new Runnable() {
 			@Override

@@ -1,6 +1,8 @@
 package shared;
 
+import java.sql.Time;
 import java.util.Arrays;
+import java.util.Random;
 
 public class Map {
 
@@ -10,13 +12,12 @@ public class Map {
 	private static final int TREASURE_ROOMS = 1;
 	private static final int START_POS = 7;
 	private static final int DEFAULT_SIZE = 5;
-	private static final Direction RANDOM_DIRECTION = Direction.values()[(int) (Math
-			.random() * Direction.values().length - 1)];
 
 	private int size;
 	private int iSecretRooms;
 	private int iMiniBossRooms;
 	private int iTreasureRooms;
+	private Random random = new Random(System.currentTimeMillis());
 	private int[][] currentMap = new int[MAX_MAP_SIZE][MAX_MAP_SIZE];
 
 	/**
@@ -42,24 +43,34 @@ public class Map {
 		int iPos = START_POS;
 		int jPos = START_POS;
 		int mapSize = size;
-
+		System.out.println(mapSize);
 		iSecretRooms = SECRET_ROOMS;
 		iMiniBossRooms = MINI_BOSS_ROOMS;
 		iTreasureRooms = TREASURE_ROOMS;
 
 		// Set start position;
-		currentMap[iPos][jPos] = 1;
+		currentMap[iPos][jPos] = 5;
 		mapSize--;
 		for (int i = 0; i < mapSize; i++) {
 			boolean foundEmpty = false;
 			iPos = START_POS;
 			jPos = START_POS;
 			while (!foundEmpty) {
-				Direction direction = RANDOM_DIRECTION;
-				System.out.println(direction);
+				Direction direction = Direction.values()[random
+						.nextInt(Direction.values().length - 1)];
+				if (Global.DEBUG)
+					System.out.println(direction);
 				if (canPlace(iPos, jPos, direction, 0)) {
 					place(iPos, jPos, direction, 0);
-					break;
+					foundEmpty = true;
+				} else {
+					direction = Direction.values()[random.nextInt(Direction
+							.values().length - 1)];
+					Node n = getRoom(iPos, jPos, direction);
+					if (currentMap[n.i][n.j] != 0) {
+						iPos = n.i;
+						jPos = n.j;
+					}
 				}
 
 			}
@@ -96,14 +107,15 @@ public class Map {
 	 *            {@link int}
 	 */
 	public void setSize(int size) {
-		if (size * size < MAX_MAP_SIZE * MAX_MAP_SIZE)
+		if (size < MAX_MAP_SIZE * MAX_MAP_SIZE)
 			this.size = size;
 		else {
 			this.size = DEFAULT_SIZE;
-			System.err.println("Map size unchanged, size " + size
-					+ " was to large, please use a size less than "
-					+ (MAX_MAP_SIZE * MAX_MAP_SIZE - MAX_MAP_SIZE)
-					+ " current map has been resized to " + DEFAULT_SIZE);
+			if (Global.DEBUG)
+				System.err.println("Map size unchanged, size " + size
+						+ " was to large, please use a size less than "
+						+ (MAX_MAP_SIZE * MAX_MAP_SIZE - MAX_MAP_SIZE)
+						+ " current map has been resized to " + DEFAULT_SIZE);
 		}
 
 	}
@@ -125,35 +137,50 @@ public class Map {
 	 */
 	private boolean canPlace(int iCurrent, int jCurrent, Direction direction,
 			int roomType) {
-		if (getRoom(iCurrent, jCurrent, direction) != null)
+		Node n = getRoom(iCurrent, jCurrent, direction);
+		if (n != null && currentMap[n.i][n.j] == 0)
 			return true;
+		if (Global.DEBUG)
+			System.out.println("Room could not be placed at position " + n.i
+					+ " " + n.j);
 		return false;
 	}
 
 	/**
 	 * Places a room, at a in the direction from your current location
-	 * @param iCurrent {@link int}
-	 * @param jCurrent {@link int}
-	 * @param direction {@link Direction}
+	 * 
+	 * @param iCurrent
+	 *            {@link int}
+	 * @param jCurrent
+	 *            {@link int}
+	 * @param direction
+	 *            {@link Direction}
 	 * @param roomType
-	 * @return {@link Boolean} True if the room was placed successfully 
+	 * @return {@link Boolean} True if the room was placed successfully
 	 */
 	private boolean place(int iCurrent, int jCurrent, Direction direction,
 			int roomType) {
 		Node n = getRoom(iCurrent, jCurrent, direction);
-		if  (n!= null) {
+		if (n != null) {
 			currentMap[n.i][n.j] = 1;
 			return true;
 		}
-		System.err.println("Room could not be placed at position" + n.i + " " + n.j);
+		if (Global.DEBUG)
+			System.out.println("Room could not be placed at position" + n.i
+					+ " " + n.j);
 		return false;
 	}
 
 	/**
-	 * Returns a node containing the co-ordinates of a room, using current location and a direction you are moving
-	 * @param iCurrent {@link int}
-	 * @param jCurrent {@link int}
-	 * @param direction {@link Direction}
+	 * Returns a node containing the co-ordinates of a room, using current
+	 * location and a direction you are moving
+	 * 
+	 * @param iCurrent
+	 *            {@link int}
+	 * @param jCurrent
+	 *            {@link int}
+	 * @param direction
+	 *            {@link Direction}
 	 * @return {@link Node}
 	 */
 	private Node getRoom(int iCurrent, int jCurrent, Direction direction) {
@@ -162,15 +189,15 @@ public class Map {
 
 		case NORTH:
 			if (jCurrent > 0)
-				return (new Node(iCurrent, jCurrent - 1));
+				return (new Node(iCurrent - 1, jCurrent));
 			break;
 		case EAST:
 			if (iCurrent < MAX_MAP_SIZE - 1)
-				return (new Node(iCurrent + 1, jCurrent));
+				return (new Node(iCurrent, jCurrent + 1));
 			break;
 		case SOUTH:
 			if (jCurrent < MAX_MAP_SIZE - 1)
-				return (new Node(iCurrent, jCurrent - 1));
+				return (new Node(iCurrent + 1, jCurrent));
 			break;
 		case WEST:
 			if (iCurrent > 0)
@@ -179,7 +206,7 @@ public class Map {
 		default:
 			return null;
 		}
-		//Can unable to get that room
+		// Can unable to get that room
 		return null;
 	}
 }
